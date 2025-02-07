@@ -1,112 +1,50 @@
 package main
 
 import (
-	"errors"
 	"net/http"
 
+	"github.com/gevorgalaverdyan/go-playground/db"
+	"github.com/gevorgalaverdyan/go-playground/models"
 	"github.com/gin-gonic/gin"
 )
 
-type todo struct {
-	ID        string `json:"id"`
-	Item      string `json:"item"`
-	Completed bool   `json:"completed"`
-}
-
-type Error struct {
-	Message string `json:"message"`
-}
-
-var todos = []todo{
-	{ID: "1", Item: "clean", Completed: false},
-	{ID: "2", Item: "read", Completed: false},
-	{ID: "3", Item: "sing", Completed: false},
-}
-
-// http://universities.hipolabs.com/search?country=Canada
-
-// info abt http context ... body, header
-func getTodos(c *gin.Context) {
-	//change status of req
-	c.IndentedJSON(http.StatusOK, todos)
-}
-
-func addTodos(c *gin.Context) {
-	var newTodo todo
-
-	if err := c.BindJSON(&newTodo); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, Error{Message: "Bind issue"})
-		return
-	}
-
-	for _, x := range todos {
-		if x.ID == newTodo.ID {
-			c.IndentedJSON(http.StatusBadRequest, Error{Message: "Duplicate ID"})
-			return
-		}
-	}
-
-	todos = append(todos, newTodo)
-
-	c.IndentedJSON(http.StatusCreated, newTodo)
-}
-
-func getTodoById(id string) (*todo, error) {
-	for i, x := range todos {
-		if x.ID == id {
-			return &todos[i], nil
-		}
-	}
-
-	return nil, errors.New("todo not found")
-}
-
-func getTodo(c *gin.Context) {
-	id := c.Param("id")
-
-	todo, err := getTodoById(id)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, Error{Message: "Todo not found"})
-		return
-	}
-
-	c.IndentedJSON(http.StatusOK, todo)
-}
-
-func updateTodoStatus(c *gin.Context) {
-    id := c.Param("id")
-    var updatedTodo todo
-
-    if err := c.BindJSON(&updatedTodo); err != nil {
-        c.IndentedJSON(http.StatusBadRequest, Error{Message: "Invalid request body"})
-        return
-    }
-
-    todo, err := getTodoById(id)
-    if err != nil {
-        c.IndentedJSON(http.StatusNotFound, Error{Message: "Todo not found"})
-        return
-    }
-
-    // Update the todo status
-    todo.Completed = updatedTodo.Completed
-    c.IndentedJSON(http.StatusOK, todo)
-}
-
 func main() {
-	router := gin.Default()
-	router.GET("/", func(ctx *gin.Context) {
-		ctx.IndentedJSON(http.StatusOK, "OK")
+	db.InitDB()
+	server := gin.Default()
+
+	server.GET("/", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{"message": "OK"})
 	})
 
-	router.GET("/todos", getTodos)
+	server.GET("/events", getEvents)
+	server.POST("/event", createEvent)
 
-	router.POST("/todos", addTodos)
+	server.Run(":9090")
+}
 
-	router.GET("/todo/:id", getTodo)
+func getEvents(ctx *gin.Context) {
+	events, err := models.GetAllEvents()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "internal err"})
+		return
+	}
+	ctx.JSON(http.StatusOK, events)
+}
 
-	router.PATCH("/todo/:id", updateTodoStatus)
+func createEvent(ctx *gin.Context){
+	var newEvent models.Event
 
-	router.Run("localhost:9090")
+	err := ctx.ShouldBindJSON(&newEvent)
+	
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message":"binding issue"})
+		return 
+	}
+
+	errMsg := newEvent.Save()
+	if errMsg.Message != "" {
+		ctx.JSON(http.StatusInternalServerError, errMsg.Message)
+		return
+	}
+	ctx.JSON(http.StatusCreated, newEvent)
 }
