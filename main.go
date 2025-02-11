@@ -1,24 +1,33 @@
 package main
 
 import (
-	"net/http"
+	// "net/http"
 
-	"github.com/gevorgalaverdyan/go-playground/db"
-	"github.com/gevorgalaverdyan/go-playground/routes"
-	"github.com/gin-gonic/gin"
+	// "github.com/gevorgalaverdyan/go-playground/db"
+	// "github.com/gevorgalaverdyan/go-playground/routes"
+	"fmt"
+	"time"
+
+	"github.com/gevorgalaverdyan/go-playground/utils"
+	// "github.com/gin-gonic/gin"
 )
 
 func main() {
-	db.InitDB()
-	server := gin.Default()
+	startTime := time.Now()
 
-	server.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"message": "OK"})
-	})
+	utils.PopulateFile();
 
-	routes.RegisterRoutes(server)
+	fmt.Println(time.Since(startTime))
+	// db.InitDB()
+	// server := gin.Default()
 
-	server.Run(":9090")
+	// server.GET("/", func(ctx *gin.Context) {
+	// 	ctx.JSON(http.StatusOK, gin.H{"message": "OK"})
+	// })
+
+	// routes.RegisterRoutes(server)
+
+	// server.Run(":9090")
 }
 
 

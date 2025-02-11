@@ -1,6 +1,6 @@
 package routes
 
-import(
+import (
 	"net/http"
 	"strconv"
 
@@ -17,14 +17,14 @@ func getEvents(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, events)
 }
 
-func createEvent(ctx *gin.Context){
-	var newEvent models.Event
+func createEvent(ctx *gin.Context) {
+	var newEvent models.University
 
 	err := ctx.ShouldBindJSON(&newEvent)
-	
+
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message":"binding issue"})
-		return 
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "binding issue"})
+		return
 	}
 
 	errMsg := newEvent.Save()
@@ -35,7 +35,7 @@ func createEvent(ctx *gin.Context){
 	ctx.JSON(http.StatusCreated, newEvent)
 }
 
-func getEvent(ctx *gin.Context){
+func getEvent(ctx *gin.Context) {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		panic(err)
@@ -45,7 +45,7 @@ func getEvent(ctx *gin.Context){
 
 	if customErr.Message != "" {
 		ctx.JSON(http.StatusInternalServerError, customErr.Message)
-		return 
+		return
 	}
 
 	ctx.JSON(http.StatusOK, event)
@@ -59,16 +59,16 @@ func updateEvent(ctx *gin.Context) {
 
 	_, customErr := models.GetById(id)
 	if customErr.Message != "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message":"exists issue"})
-		return 
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "exists issue"})
+		return
 	}
 
-	var e models.Event
+	var e models.University
 	err = ctx.ShouldBindJSON(&e)
-	
+
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message":"binding issue"})
-		return 
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "binding issue"})
+		return
 	}
 
 	e.ID = id
@@ -76,13 +76,13 @@ func updateEvent(ctx *gin.Context) {
 
 	if customErr.Message != "" {
 		ctx.JSON(http.StatusInternalServerError, customErr.Message)
-		return 
+		return
 	}
 
 	ctx.JSON(http.StatusOK, e)
 }
 
-func deleteEvent(ctx *gin.Context){
+func deleteEvent(ctx *gin.Context) {
 	id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
 	if err != nil {
 		panic(err)
@@ -90,15 +90,15 @@ func deleteEvent(ctx *gin.Context){
 
 	e, customErr := models.GetById(id)
 	if customErr.Message != "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message":"exists issue"})
-		return 
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "exists issue"})
+		return
 	}
 
 	customErr = e.Delete()
 
 	if customErr.Message != "" {
 		ctx.JSON(http.StatusInternalServerError, customErr.Message)
-		return 
+		return
 	}
 
 	ctx.JSON(http.StatusOK, e)
